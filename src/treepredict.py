@@ -90,7 +90,7 @@ def entropy(rows):
 # 단순 분류의 문제가 아니기 때문에 득점 함수에서 숫자의 조밀성을 따져야 한다.
 def variance(rows):
     if len(rows) == 0: return 0
-    data = [float(row[len(row)-1]) for row in rows]
+    data = [float(row[len(row)-1]) for row in rows if row != None]
     mean = sum(data) / len(data)
     variance = sum([(d-mean)**2 for d in data]) / len(data)
     return variance
