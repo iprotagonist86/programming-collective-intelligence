@@ -187,6 +187,9 @@ cur = test_crawler.con.execute('select * from pagerank order by score desc')
 for i in range(3): print cur.next()
 
 
+import nn
+mynet = nn.searchnet('nn.db')
+
 class searcher:
     def __init__(self, dbname):
         self.con = sqlite.connect(dbname)
@@ -241,10 +244,10 @@ class searcher:
         
         # 이후 득점 함수를 넣을 위치임
         #weights = [(1.0, self.frequencyscore(rows))]
-        weights = [(1.0, self.locationscore(rows)), 
-                   (1.0, self.locationscore(rows)),
+        weights = [(1.0, self.locationscore(rows)),
                    (1.0, self.distancescore(rows)),
-                   (1.0, self.pagerankscore(rows))]
+                   (1.0, self.pagerankscore(rows)),
+                   (1.0, self.nnscore(rows, wordids))]
         
         for(weight, scores) in weights:
             for url in totalscores:
@@ -312,12 +315,21 @@ class searcher:
         return normalizedscores
     
     
+    def nnscore(self, rows, wordids):
+        # Get unique URL IDs as an ordered list
+        urlids = [urlid for urlid in set([row[0] for row in rows])]
+        nnres = mynet.getresult(wordids, urlids)
+        scores = dict([(urlids[i], nnres[i]) for i in range(len(urlids))])
+        return self.normalizescores(scores)
+    
+    
     def query(self, q):
         rows, wordids = self.getmatchrows(q)
         scores = self.getscoredlist(rows, wordids)
         rankedscores = sorted([(score, url) for (url, score) in scores.items()], reverse=1)
-        for(score, urlid) in rankedscores[0:11]:
+        for(score, urlid) in rankedscores[0:10]:
             print '%f\t%s' % (score, self.geturlname(urlid))
+        return wordids, [r[1] for r in rankedscores[0:10]]
 
 
 #######################################################
@@ -325,4 +337,4 @@ class searcher:
 #######################################################
 e = searcher('searchindex.db')
 print e.getmatchrows('functional programming')
-print e.query('functional programming')
+e.query('functional programming')
