@@ -219,6 +219,36 @@ def classify(observation, tree):
 
 print classify(['(direct)', 'USA', 'yes', 5], tree)
 
+def mdclassify(observation, tree):
+    if tree.results != None:
+        return tree.results
+    else:
+        v = observation[tree.col]
+        if v == None:
+            tr, fr = mdclassify(observation, tree.tb), mdclassify(observation, tree.fb)
+            tcount = sum(tr.values())
+            fcount = sum(fr.values())
+            tw = float(tcount) / (tcount + fcount)
+            fw = float(fcount) / (tcount + fcount)
+            result = {}
+            for k,v in tr.items(): result[k] = v * tw
+            for k,v in fr.items(): result[k] = v * fw
+            return result
+        else:
+            if isinstance(v, int) or isinstance(v, float):
+                if v >= tree.value: branch = tree.tb
+                else: branch = tree.fb
+            else:
+                if v >= tree.value: branch = tree.tb
+                else: branch = tree.fb
+            return mdclassify(observation, branch)
+
+print mdclassify(['google', None, 'yes', None], tree)
+print mdclassify(['google', 'France', None, None], tree)
+France = mdclassify([None, 'France', None, None], tree)
+print sum(France.values())
+
+
 # 과잉적합 피하기 위한 방법
 def prune(tree, mingain):
     # 가지가 끝 노드가 아닌 경우 가지 침
@@ -242,8 +272,8 @@ def prune(tree, mingain):
             tree.tb, tree.fb = None, None
             tree.results = uniquecounts(tb+fb)
 
-prune(tree, 0.1)
-printtree(tree)
-prune(tree, 1.0)
-printtree(tree)
+#prune(tree, 0.1)
+#printtree(tree)
+#prune(tree, 1.0)
+#printtree(tree)
 
