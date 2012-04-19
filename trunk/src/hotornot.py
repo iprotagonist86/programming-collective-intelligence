@@ -52,3 +52,6 @@ def getpeopledata(ratings):
         except:
             pass
     return result
+
+l1 = getrandomrating(500)
+print len(l1)
