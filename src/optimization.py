@@ -168,6 +168,8 @@ def annealingoptimize(domain, costf, T=10000.0, cool=0.95, step=1):
         ea = costf(vec)
         eb = costf(vecb)
         p = pow(math.e, (-eb-ea)/T)
+
+        print vec,ea
         
         # 더 좋은지, 또는 확률이 차단 기준 이하인지 판단함
         if(eb < ea or random.random() < p):
@@ -234,3 +236,48 @@ def geneticoptimize(domain, costf, popsize=50, step=1, mutprob=0.2, elite=0.2, m
 
 #s = geneticoptimize(domain, schedulecost)
 #printschedule(s)
+
+def swarmoptimize(domain,costf,popsize=20,lrate=0.1,maxv=2.0,iters=50):
+    # Initialize individuals
+    # current solutions
+    x=[]
+    
+    # best solutions
+    p=[]
+    
+    # velocities
+    v=[]
+    
+    for i in range(0,popsize):
+        vec=[float(random.randint(domain[i][0],domain[i][1])) 
+             for i in range(len(domain))]
+        x.append(vec)
+        p.append(vec[:])
+        v.append([0.0 for i in vec])
+        
+        
+    for ml in range(0,iters):
+        for i in range(0,popsize):
+            # Best solution for this particle
+            if costf(x[i])<costf(p[i]):
+                p[i]=x[i][:]
+            g=i
+            
+            # Best solution for any particle
+            for j in range(0,popsize):
+                if costf(p[j])<costf(p[g]): g=j
+            for d in range(len(x[i])):
+                # Update the velocity of this particle
+                v[i][d]+=lrate*(p[i][d]-x[i][d])+lrate*(p[g][d]-x[i][d])
+                
+                # constrain velocity to a maximum
+                if v[i][d]>maxv: v[i][d]=maxv
+                elif v[i][d]<-maxv: v[i][d]=-maxv
+                
+                # constrain bounds of solutions
+                x[i][d]+=v[i][d]
+                if x[i][d]<domain[d][0]: x[i][d]=domain[d][0]
+                elif x[i][d]>domain[d][1]: x[i][d]=domain[d][1]
+                
+        print p[g],costf(p[g])
+    return p[g]
